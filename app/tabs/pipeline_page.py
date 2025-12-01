@@ -57,7 +57,7 @@ def render(config, progress_cb):
         
         #### Limitations:
         - **Streamlit constraints**: Higher number of feature combinations and larger datasets are limited on this platform
-        - Visit the [GitHub repository](https://github.com/ashoktzr/AlphaZero) to access the code without limitations and contribute if you have ideas to take this further!
+        - Visit the [GitHub repository](https://github.com/ashoktzr/Alpha_Zero) to access the code without limitations and contribute if you have ideas to take this further!
         """)
     
     # Feedback Form
