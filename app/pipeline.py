@@ -24,6 +24,10 @@ class Pipeline:
         self.labels: Optional[pd.Series] = None
         self.cluster_stats: Optional[pd.DataFrame] = None
         self.result: Optional[PipelineResult] = None
+        # Clustering configuration tracking
+        self.clustering_method: str = "Unknown"
+        self.scaling_method: str = "Unknown"
+        self.num_features: int = 0
 
     def load_data(self, df: pd.DataFrame):
         """Load initial dataframe."""
@@ -91,6 +95,11 @@ class Pipeline:
             raise ValueError("Indicators not computed")
         
         self.selected_features = selected_features
+        
+        # Store clustering configuration
+        self.clustering_method = cluster_cfg.method
+        self.scaling_method = scaling_method if scaling_method else "None"
+        self.num_features = len(selected_features)
         
         # Create a subset for clustering (Memory Optimization)
         # We only copy the selected features

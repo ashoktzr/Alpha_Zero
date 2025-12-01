@@ -55,9 +55,9 @@ def render(config, progress_cb):
         
         💡 **Note**: Technical indicators are inherently **backward-looking**. They describe what *has happened*, not what *will happen*. This tool helps you test if historical patterns actually predict future outcomes.
         
-        #### Unlimited Version:
-        - **No platform constraints**: This unlimited branch allows large datasets, unlimited features, and extended lookahead periods
-        - Visit the [GitHub repository](https://github.com/ashoktzr/Alpha_Zero) to switch between `streamlit` (cloud-optimized) and `unlimited` (full-featured) branches
+        #### Limitations:
+        - **Streamlit constraints**: Higher number of feature combinations and larger datasets are limited on this platform
+        - Visit the [GitHub repository](https://github.com/ashoktzr/AlphaZero) to access the code without limitations and contribute if you have ideas to take this further!
         """)
     
     # Feedback Form
@@ -75,11 +75,11 @@ def render(config, progress_cb):
                     import requests
                     from datetime import datetime
                     
-                    # Get webhook from secrets (optional override)
+                    # Get webhook from secrets (optional)
                     try:
-                        FEEDBACK_WEBHOOK = st.secrets.get("FEEDBACK_WEBHOOK", "https://script.google.com/macros/s/AKfycbzmnBy1waawjMNOUG03bzy52f5Y5_w9cfTvWbVfhkBgtZWS750ZGcnM6UTtkC4JKhaBfA/exec")
+                        FEEDBACK_WEBHOOK = st.secrets.get("FEEDBACK_WEBHOOK", "")
                     except Exception:
-                        FEEDBACK_WEBHOOK = "https://script.google.com/macros/s/AKfycbzmnBy1waawjMNOUG03bzy52f5Y5_w9cfTvWbVfhkBgtZWS750ZGcnM6UTtkC4JKhaBfA/exec"
+                        FEEDBACK_WEBHOOK = ""
                     
                     payload = {
                         "timestamp": datetime.utcnow().isoformat(),
@@ -168,7 +168,10 @@ def render(config, progress_cb):
                     st.info("🌍 Using public Binance API (unauthenticated)")
                 
                 
-                # Unlimited version - no row limit
+                # Calculate limit based on days (approx)
+                # 1 day = 1440 mins
+                # Limit to 50k rows max as per requirement
+                limit_rows = 50000
                 
                 with st.spinner(f"Fetching {symbol} ({timeframe}) for last {days_back} days..."):
                     # Calculate start timestamp
@@ -182,6 +185,12 @@ def render(config, progress_cb):
                         all_ohlcv.extend(ohlcv)
                         since = ohlcv[-1][0] + 1 # Next timestamp
                         
+                        # Safety break for row limit
+                        if len(all_ohlcv) >= limit_rows:
+                            all_ohlcv = all_ohlcv[:limit_rows]
+                            st.warning(f"⚠️ Data truncated to {limit_rows} rows to save memory.")
+                            break
+                            
                         # Rate limit
                         # time.sleep(exchange.rateLimit / 1000) 
                         
@@ -193,7 +202,9 @@ def render(config, progress_cb):
                         df['timestamp'] = pd.to_datetime(df['timestamp'], unit='ms')
                         df.set_index('timestamp', inplace=True)
                         
-                        # Keep float64 precision for accuracy (unlimited version)
+                        # Ensure float32
+                        for c in ['open', 'high', 'low', 'close', 'volume']:
+                            df[c] = df[c].astype('float32')
                             
                         st.session_state['pipeline'].load_data(df)
                         st.success(f"Loaded {len(df)} rows for {symbol}")
@@ -315,6 +326,7 @@ def render(config, progress_cb):
                 groups["Price/Volume & Others"].append(f)
         
         # Enforce Restrictions
+        # st.info("ℹ️ Select up to 4 features.")
         
         selected_feats = []
         
@@ -328,8 +340,10 @@ def render(config, progress_cb):
             
         selected_feats = sel_ind + sel_oth
         
-        st.write(f"**Total Selected:** {len(selected_feats)}")
-        st.caption("💡 Unlimited version: No feature limit. Select as many as needed for your analysis.")
+        st.write(f"**Total Selected:** {len(selected_feats)} / 4")
+        
+        if len(selected_feats) > 4:
+            st.error("⚠️ You have selected more than 4 features. Please deselect some.")
         
         if st.button("Save Selection to Profile"):
             prof = load_profile(config['profile_name'])
@@ -468,7 +482,7 @@ def render(config, progress_cb):
             with c2:
                 sl_pct_in = st.number_input("SL %", value=config['sl_pct']*100, step=0.1, format="%.2f") / 100
             with c3:
-                lookahead_in = st.number_input("Max Lookahead (candles)", value=config['max_lookahead'], min_value=15, step=1)
+                lookahead_in = st.number_input("Max Lookahead (candles)", value=min(60, config['max_lookahead']), min_value=1, max_value=60, step=1)
                 
             # Risk Check Logic
             bypass_risk = False
@@ -497,21 +511,29 @@ def render(config, progress_cb):
         st.markdown("---")
         # Header Removed as per request
         
-        # Get webhook from secrets (optional override)
+        # Get webhook from secrets (optional)
         try:
-            WEBHOOK_URL = st.secrets.get("HQ_RUNS_WEBHOOK", "https://script.google.com/macros/s/AKfycbyMi_dAR997wW0aja8_3wsiCyW3RikNbJWcdKT60RAgnKv7Kc8VCypEC1pOEF_IuXGf/exec")
+            WEBHOOK_URL = st.secrets.get("HQ_RUNS_WEBHOOK", "")
         except Exception:
-            WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbyMi_dAR997wW0aja8_3wsiCyW3RikNbJWcdKT60RAgnKv7Kc8VCypEC1pOEF_IuXGf/exec" 
+            WEBHOOK_URL = "" 
         
         # Check for High Quality Clusters
-        # Criteria: Precision > 50% (Long or Short) AND Coverage >= 3%
+        # Criteria: Precision ≥ 50% (Long or Short) AND Coverage >= 3%
         stats_df = st.session_state['pipeline'].cluster_stats
         
         # Remove PnL columns entirely
         display_cols = [c for c in stats_df.columns if 'pnl' not in c.lower()]
         stats_df = stats_df[display_cols]
         
+        
         st.write("#### Results")
+        
+        # Display clustering configuration from pipeline object
+        clustering_method = st.session_state['pipeline'].clustering_method
+        scaling_method_display = st.session_state['pipeline'].scaling_method
+        num_features = st.session_state['pipeline'].num_features
+        st.caption(f"**Clustering Method:** {clustering_method} | **Scaling:** {scaling_method_display} | **Features:** {num_features}")
+        
         st.dataframe(stats_df)
         
         hq_clusters = stats_df[
@@ -603,11 +625,10 @@ def render(config, progress_cb):
         
         try:
             df_fs = st.session_state['pipeline'].df_fs
-            feats = st.session_state['pipeline'].feature_cols
+            df_scaled = st.session_state['pipeline'].df_scaled  # Use the same scaled data as first plot
             
-            # Re-compute PCA if needed (or reuse if we stored it, but re-computing is cheap for 2D)
-            # We need PCA coords aligned with df_fs
-            X = df_fs[feats].fillna(0)
+            # Re-compute PCA using the SAME SCALED features that were used for the first plot
+            X = df_scaled.fillna(0)
             pca = PCA(n_components=2)
             pcs = pca.fit_transform(X)
             
@@ -695,7 +716,7 @@ def render(config, progress_cb):
                 opacity=0.7
             )
             
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, use_container_width=True, key=f"outcome_viz_{sel_direction}_{sel_cluster}")
             
             # Legend / Explainer
             with st.expander("ℹ️ Legend: What do the colors mean?"):

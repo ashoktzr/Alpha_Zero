@@ -8,7 +8,10 @@ def extract_features(df, atr_col=None, piv_lookback=50, vol_lookback=20, ma_wind
     Extract features from dataframe. Vectorized implementation.
     """
     df = df.copy()
-    # Unlimited version: Keep float64 precision for accuracy
+    # Ensure float32 for base columns to save memory during calc
+    for c in ['close', 'high', 'low', 'open', 'volume']:
+        if c in df.columns:
+            df[c] = df[c].astype('float32')
 
     close = df['close']
     high = df['high']
