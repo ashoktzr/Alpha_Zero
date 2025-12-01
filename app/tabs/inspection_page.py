@@ -69,13 +69,6 @@ def render(tp_pct, sl_pct):
                 trade_opts,
                 key='trade_selector'
             )
-            
-            # Next button
-            current_idx = trade_opts.index(sel_trade_ts)
-            if st.button("→ Next Trade") and current_idx < len(trade_opts) - 1:
-                next_trade = trade_opts[current_idx + 1]
-                st.session_state['trade_selector'] = next_trade
-                st.rerun()
                 
             sel_trade_idx = pd.Timestamp(sel_trade_ts)
     

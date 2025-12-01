@@ -59,19 +59,6 @@ Most traders believe technical indicators can predict profitable trades. This to
 - **Visual verification**: Inspect individual trades
 
 ### 📈 **Results Analysis**
-- **Cluster metrics**: Precision, coverage, win rate, avg duration
-- **Visual pattern recognition**: See if TP/SL outcomes are spatially separated
-- **Feedback system**: Report issues or contribute on GitHub
-
----
-
-## � Quick Start
-
-### Installation
-
-```bash
-# Clone unlimited branch
-git clone -b unlimited https://github.com/ashoktzr/Alpha_Zero.git
 cd Alpha_Zero
 
 # Create virtual environment
@@ -115,31 +102,21 @@ Choose features from:
 Group similar market conditions using K-Means or HDBSCAN
 - **Why scaling?** Prevents feature dominance (volume vs RSI)
 - **Visualization**: See if clusters are well-separated
-
-### 4. **Forward Scan**
-Simulate trades from each cluster
-- **Independent of TP/SL**: Clusters don't know about your targets
-- **Verification**: Does TP hit more often than SL within this cluster?
-
-### 5. **Results**
-Analyze precision (win rate) for each cluster
-- **Goal**: Find features that separate profitable from losing trades
-- **Reality check**: Most clusters show random outcomes
-
----
-
-## 🎯 Understanding the Results
-
-### Cluster Visualization (PCA)
-- **Tight, separated clusters** = distinct market conditions
-- **Overlapping clusters** = weak feature separation
-
-### Outcome Visualization
 - **Green dots** = TP hit first
 - **Red dots** = SL hit first
 - **Gray dots** = Neither hit
 - **Spatial separation** = features working to separate wins from losses
 - **Overlapping colors** = random outcomes
+
+![Cluster PCA Visualization](docs/screenshot_cluster_pca.png)
+*PCA projection showing how market conditions group into distinct clusters*
+
+![Outcome Distribution](docs/screenshot_outcome_distribution.png)
+*Trade outcome distribution showing True Positives (wins) vs False Positives (losses/no action)*
+
+### Trade Inspection
+![Trade Inspection](docs/screenshot_trade_inspection.png)
+*Individual trade visualization with entry, TP, and SL levels for both Long and Short directions*
 
 ### Success Criteria
 Find a cluster with:

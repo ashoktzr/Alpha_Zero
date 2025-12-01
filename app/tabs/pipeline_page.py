@@ -525,7 +525,15 @@ def render(config, progress_cb):
         display_cols = [c for c in stats_df.columns if 'pnl' not in c.lower()]
         stats_df = stats_df[display_cols]
         
+        
         st.write("#### Results")
+        
+        # Display clustering configuration from pipeline object
+        clustering_method = st.session_state['pipeline'].clustering_method
+        scaling_method_display = st.session_state['pipeline'].scaling_method
+        num_features = st.session_state['pipeline'].num_features
+        st.caption(f"**Clustering Method:** {clustering_method} | **Scaling:** {scaling_method_display} | **Features:** {num_features}")
+        
         st.dataframe(stats_df)
         
         hq_clusters = stats_df[
@@ -617,11 +625,10 @@ def render(config, progress_cb):
         
         try:
             df_fs = st.session_state['pipeline'].df_fs
-            feats = st.session_state['pipeline'].feature_cols
+            df_scaled = st.session_state['pipeline'].df_scaled  # Use the same scaled data as first plot
             
-            # Re-compute PCA if needed (or reuse if we stored it, but re-computing is cheap for 2D)
-            # We need PCA coords aligned with df_fs
-            X = df_fs[feats].fillna(0)
+            # Re-compute PCA using the SAME SCALED features that were used for the first plot
+            X = df_scaled.fillna(0)
             pca = PCA(n_components=2)
             pcs = pca.fit_transform(X)
             
@@ -709,7 +716,7 @@ def render(config, progress_cb):
                 opacity=0.7
             )
             
-            st.plotly_chart(fig, use_container_width=True)
+            st.plotly_chart(fig, use_container_width=True, key=f"outcome_viz_{sel_direction}_{sel_cluster}")
             
             # Legend / Explainer
             with st.expander("ℹ️ Legend: What do the colors mean?"):
