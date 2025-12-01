@@ -55,9 +55,6 @@ def render(config, progress_cb):
         
         💡 **Note**: Technical indicators are inherently **backward-looking**. They describe what *has happened*, not what *will happen*. This tool helps you test if historical patterns actually predict future outcomes.
         
-        #### Limitations:
-        - **Streamlit constraints**: Higher number of feature combinations and larger datasets are limited on this platform
-        - Visit the [GitHub repository](https://github.com/ashoktzr/AlphaZero) to access the code without limitations and contribute if you have ideas to take this further!
         """)
     
     # Feedback Form
