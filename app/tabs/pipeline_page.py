@@ -41,15 +41,16 @@ def render(config, progress_cb):
         - **Clusters are independent** of TP/SL settings or the forward scan mechanism
         - **Clustering** identifies similar market conditions based solely on feature similarity
         - **Forward Scan** verifies whether TP/SL hit points are spatially closer within a cluster, answering: *"Can this cluster be used for rule-based trading?"*
-        - The goal is to find if a cluster reliably leads to one outcome (TP) more than the other (SL)
+        - The goal is to find if a cluster reliably leads to one outcome (TP) more than the other (SL) in any particular direction long or short.
+    
         
         #### The Holy Grail:
         **Any feature/indicator combination that consistently separates profitable trades from losing ones is pure gold.**
         
         #### Your Mission:
-        Find a combination of features where **Precision > 50%** for any direction (Long or Short) with **Risk/Reward (SL/TP) > 1** (e.g., SL=1%, TP=0.5%).
+        Find a combination of features where **Precision > 50%** for any direction (Long or Short) with **reward/risk (TP/SL) > 1** (e.g., TP=1%, SL=0.5%).
         
-        ⚠️ **Spoiler**: With SL/TP ratios above 1.00 (e.g., TP=1%, SL=0.5%), achieving >50% precision in a cluster with **coverage ≥ 3%** on a dataset of **at least 25K-50K rows** is virtually impossible due to random market behavior. *(Note: This is very modest; real historical tests are done on millions of rows)*
+        ⚠️ **Spoiler**: With TP/SL ratio above 1.00 (e.g., TP=1%, SL=0.5%), achieving >50% precision in a cluster with **coverage ≥ 3%** on a dataset of **at least 25K-50K rows** is virtually impossible due to random market behavior. *(Note: This is very modest; real historical tests are done on millions of rows)*
         
         If you find a robust combination, you might be onto something valuable! *(You still have to account for slippage and other costs)*
         
