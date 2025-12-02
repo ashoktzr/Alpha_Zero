@@ -28,14 +28,14 @@ For detailed branch differences, see [BRANCHES.md](BRANCHES.md).
 
 ## 💡 The Challenge
 
-**Can you find a feature combination that achieves >50% precision with SL/TP > 1?**
+**Can you find a feature combination that achieves >50% precision with TP/SL > 1?**
 
 Most traders believe technical indicators can predict profitable trades. This tool lets you test that hypothesis using:
 - Machine learning clustering (K-Means/HDBSCAN)
 - Rigorous historical simulation
 - Statistical analysis of win rates
 
-**Spoiler**: With realistic risk/reward ratios, achieving consistent profitability is virtually impossible due to market randomness.
+**Spoiler**: With realistic reward/risk ratios, achieving consistent profitability is virtually impossible due to market randomness.
 
 ---
 
@@ -54,7 +54,6 @@ Most traders believe technical indicators can predict profitable trades. This to
 
 ### 🔍 **Forward Scan**
 - **Dual-direction simulation**: Both long and short analyzed simultaneously
-- **Precise TP/SL detection**: Uses high/low prices, not just close
 - **Configurable lookahead**: Prevent data leakage
 - **Visual verification**: Inspect individual trades
 
@@ -122,7 +121,7 @@ Group similar market conditions using K-Means or HDBSCAN
 Find a cluster with:
 - **Precision > 50%** (win rate)
 - **Coverage ≥ 3%** (enough trades)
-- **SL/TP > 1** (realistic risk/reward)
+- **TP/SL > 1** (realistic reward/risk)
 
 ---
 
