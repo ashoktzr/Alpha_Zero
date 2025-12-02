@@ -57,8 +57,8 @@ Most traders believe technical indicators can predict profitable trades. This to
 - **Configurable lookahead**: Prevent data leakage
 - **Visual verification**: Inspect individual trades
 
-### 📈 **Results Analysis**
-cd Alpha_Zero
+
+# Set-up Instructions
 
 # Create virtual environment
 python -m venv .venv
