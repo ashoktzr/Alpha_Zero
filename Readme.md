@@ -57,8 +57,7 @@ Most traders believe technical indicators can predict profitable trades. This to
 - **Configurable lookahead**: Prevent data leakage
 - **Visual verification**: Inspect individual trades
 
-### 📈 **Results Analysis**
-cd Alpha_Zero
+# Set-up Instructions
 
 # Create virtual environment
 python -m venv .venv
@@ -68,7 +67,7 @@ source .venv/bin/activate  # Windows: .venv\\Scripts\\activate
 pip install -r requirements.txt
 ```
 
-### Run the App
+# Run the App
 
 ```bash
 streamlit run app/gui_streamlit.py
