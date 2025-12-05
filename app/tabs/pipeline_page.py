@@ -246,6 +246,12 @@ def render(config, progress_cb):
             else:
                 try:
                     df = smart_read_csv(path)
+                    
+                    # Enforce 50k row limit
+                    if len(df) > 50000:
+                        df = df.iloc[:50000]
+                        st.warning("⚠️ CSV contains more than 50,000 rows. Truncated to first 50,000 to meet Streamlit Cloud constraints.")
+                        
                     st.session_state['pipeline'].load_data(df)
                 except Exception as e:
                     st.error(f"Error loading file: {e}")
