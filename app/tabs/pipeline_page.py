@@ -31,7 +31,7 @@ def render(config, progress_cb):
         6. **Results**: Evaluate precision (win rate) for each cluster
         
         #### The Feature Space:
-        You can select up to **4 features** from:
+        You can select features from:
         - **Price/Structure**: log returns, autocorrelation, distance to pivots, MA angles, volume
         - **Indicators**: RSI, MACD, Bollinger Bands, ATR, Stochastic, Williams %R, CCI, ADX
         
@@ -42,15 +42,14 @@ def render(config, progress_cb):
         - **Clustering** identifies similar market conditions based solely on feature similarity
         - **Forward Scan** verifies whether TP/SL hit points are spatially closer within a cluster, answering: *"Can this cluster be used for rule-based trading?"*
         - The goal is to find if a cluster reliably leads to one outcome (TP) more than the other (SL) in any particular direction long or short.
-    
         
         #### The Holy Grail:
         **Any feature/indicator combination that consistently separates profitable trades from losing ones is pure gold.**
         
         #### Your Mission:
-        Find a combination of features where **Precision > 50%** for any direction (Long or Short) with **reward/risk (TP/SL) > 1** (e.g., TP=1%, SL=0.5%).
+        Find a combination of features where **Precision > 50%** for any direction (Long or Short) with **Reward/Risk (TP/SL) > 1** (e.g., TP=1%, SL=0.5%).
         
-        ⚠️ **Spoiler**: With TP/SL ratio above 1.00 (e.g., TP=1%, SL=0.5%), achieving >50% precision in a cluster with **coverage ≥ 3%** on a dataset of **at least 25K-50K rows** is virtually impossible due to random market behavior. *(Note: This is very modest; real historical tests are done on millions of rows)*
+        ⚠️ **Spoiler**: With TP/SL ratios above 1.00 (e.g., TP=1%, SL=0.5%), achieving >50% precision in a cluster with **coverage ≥ 3%** on a dataset of **at least 25K-50K rows** is virtually impossible due to random market behavior. *(Note: This is very modest; real historical tests are done on millions of rows)*
         
         If you find a robust combination, you might be onto something valuable! *(You still have to account for slippage and other costs)*
         
@@ -327,7 +326,7 @@ def render(config, progress_cb):
                 groups["Price/Volume & Others"].append(f)
         
         # Enforce Restrictions
-        # st.info("ℹ️ Select up to 4 features.")
+        st.info("ℹ️ Select up to 4 features.")
         
         selected_feats = []
         
@@ -457,7 +456,8 @@ def render(config, progress_cb):
             
             try:
                 # Inline PCA visualization
-                X = st.session_state['pipeline'].df_scaled.fillna(0)
+                # Use float32 for PCA to save memory
+                X = st.session_state['pipeline'].df_scaled.fillna(0).astype('float32')
                 pca = PCA(n_components=2)
                 pcs = pca.fit_transform(X)
                 viz_df = pd.DataFrame({
@@ -465,7 +465,21 @@ def render(config, progress_cb):
                     'PC2': pcs[:,1], 
                     'Cluster': st.session_state['pipeline'].labels.astype(str)
                 })
-                fig = px.scatter(viz_df, x='PC1', y='PC2', color='Cluster', title="Clusters in PCA Space")
+                # Define color map for noise
+                unique_clusters = viz_df['Cluster'].unique()
+                color_map = {}
+                if '-1' in unique_clusters:
+                    color_map['-1'] = 'lightgray'
+
+                fig = px.scatter(
+                    viz_df, 
+                    x='PC1', 
+                    y='PC2', 
+                    color='Cluster', 
+                    title="Clusters in PCA Space",
+                    color_discrete_map=color_map,
+                    color_discrete_sequence=px.colors.qualitative.Bold
+                )
                 st.plotly_chart(fig, use_container_width=True)
             except Exception as e:
                 st.warning(f"Could not render PCA: {e}")
@@ -555,6 +569,19 @@ def render(config, progress_cb):
             start_date = df_data.index.min().strftime('%Y-%m-%d') if df_data is not None else "N/A"
             end_date = df_data.index.max().strftime('%Y-%m-%d') if df_data is not None else "N/A"
             
+            # Infer timeframe
+            timeframe = "N/A"
+            if df_data is not None and len(df_data) > 1:
+                diff = df_data.index[1] - df_data.index[0]
+                seconds = diff.total_seconds()
+                if seconds == 60: timeframe = "1m"
+                elif seconds == 300: timeframe = "5m"
+                elif seconds == 900: timeframe = "15m"
+                elif seconds == 3600: timeframe = "1h"
+                elif seconds == 14400: timeframe = "4h"
+                elif seconds == 86400: timeframe = "1d"
+                else: timeframe = str(diff)
+            
             # Format cluster data as comma-separated strings
             cluster_ids = ", ".join(hq_clusters['cluster_id'].astype(str).tolist())
             coverages = ", ".join(hq_clusters['coverage'].round(4).astype(str).tolist())
@@ -572,7 +599,7 @@ def render(config, progress_cb):
                 "timestamp": datetime.utcnow().isoformat(),
                 "profile": config.get('profile_name', 'Default'),
                 "time_period": f"{start_date} - {end_date}",
-                "timeframe": "N/A",  # Add if you track timeframe
+                "timeframe": timeframe,
                 "features": ", ".join(st.session_state['pipeline'].selected_features),
                 "scaling_method": scaling_info,
                 "tp_sl": f"{config['tp_pct']*100:.2f}%, {config['sl_pct']*100:.2f}%",
@@ -598,7 +625,7 @@ def render(config, progress_cb):
                 
                 st.session_state['last_logged_run_id'] = run_id
                 
-
+        
         # Download Annotated Data
             # Annotated Data Download
             if st.session_state['pipeline'].df_fs is not None:
@@ -622,7 +649,7 @@ def render(config, progress_cb):
         # Enhanced Visualization (Step 4b)
         st.write("#### 🔬 Cluster Visualization")
         
-        st.info("🎯 **Visual Pattern Recognition**: This scatter plot shows trade outcomes within clusters. **Green (TP)** = winning trades, **Red (SL)** = losing trades, **Gray** = no action. If you see clear spatial separation between TP and SL points, your features are successfully identifying profitable patterns! Overlapping colors indicate the cluster contains random outcomes—features aren't separating winners from losers.")
+        st.info("🎯 **Visual Pattern Recognition**: This scatter plot shows trade outcomes within clusters. **Green (TP)** = winning trades, **Red (SL)** = losing trades, **Gray** = no action. If you see clear spatial separation between TP and SL points, your features are successfully identifying profitable patterns! Overlapping clusters indicate the cluster contains random outcomes—features aren't separating winners from losers.")
         
         try:
             df_fs = st.session_state['pipeline'].df_fs
